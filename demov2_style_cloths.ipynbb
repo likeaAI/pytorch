@@ -1,0 +1,756 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/likeaAI/pytorch/blob/main/demov2_style_cloths.ipynbb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import torch\n",
+        "from glob import glob"
+      ],
+      "metadata": {
+        "id": "GqLVNHgIAUPm"
+      },
+      "execution_count": 1,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "id": "VvVH0717q0I1",
+        "outputId": "8ce8cd39-ee70-4333-abc6-79d5d8fdbcaa"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/\n",
+            "Collecting roboflow\n",
+            "  Downloading roboflow-0.2.4.tar.gz (15 kB)\n",
+            "Collecting certifi==2021.5.30\n",
+            "  Downloading certifi-2021.5.30-py2.py3-none-any.whl (145 kB)\n",
+            "\u001b[K     |████████████████████████████████| 145 kB 9.7 MB/s \n",
+            "\u001b[?25hCollecting chardet==4.0.0\n",
+            "  Downloading chardet-4.0.0-py2.py3-none-any.whl (178 kB)\n",
+            "\u001b[K     |████████████████████████████████| 178 kB 60.3 MB/s \n",
+            "\u001b[?25hCollecting cycler==0.10.0\n",
+            "  Downloading cycler-0.10.0-py2.py3-none-any.whl (6.5 kB)\n",
+            "Requirement already satisfied: idna==2.10 in /usr/local/lib/python3.7/dist-packages (from roboflow) (2.10)\n",
+            "Collecting kiwisolver==1.3.1\n",
+            "  Downloading kiwisolver-1.3.1-cp37-cp37m-manylinux1_x86_64.whl (1.1 MB)\n",
+            "\u001b[K     |████████████████████████████████| 1.1 MB 60.0 MB/s \n",
+            "\u001b[?25hRequirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from roboflow) (3.2.2)\n",
+            "Requirement already satisfied: numpy>=1.18.5 in /usr/local/lib/python3.7/dist-packages (from roboflow) (1.21.6)\n",
+            "Requirement already satisfied: opencv-python>=4.1.2 in /usr/local/lib/python3.7/dist-packages (from roboflow) (4.1.2.30)\n",
+            "Requirement already satisfied: Pillow>=7.1.2 in /usr/local/lib/python3.7/dist-packages (from roboflow) (7.1.2)\n",
+            "Collecting pyparsing==2.4.7\n",
+            "  Downloading pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)\n",
+            "\u001b[K     |████████████████████████████████| 67 kB 7.7 MB/s \n",
+            "\u001b[?25hRequirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from roboflow) (2.8.2)\n",
+            "Collecting python-dotenv\n",
+            "  Downloading python_dotenv-0.20.0-py3-none-any.whl (17 kB)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.7/dist-packages (from roboflow) (2.23.0)\n",
+            "Collecting requests_toolbelt\n",
+            "  Downloading requests_toolbelt-0.9.1-py2.py3-none-any.whl (54 kB)\n",
+            "\u001b[K     |████████████████████████████████| 54 kB 3.4 MB/s \n",
+            "\u001b[?25hRequirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from roboflow) (1.15.0)\n",
+            "Collecting urllib3==1.26.6\n",
+            "  Downloading urllib3-1.26.6-py2.py3-none-any.whl (138 kB)\n",
+            "\u001b[K     |████████████████████████████████| 138 kB 64.0 MB/s \n",
+            "\u001b[?25hCollecting wget\n",
+            "  Downloading wget-3.2.zip (10 kB)\n",
+            "Requirement already satisfied: tqdm>=4.41.0 in /usr/local/lib/python3.7/dist-packages (from roboflow) (4.64.0)\n",
+            "Collecting PyYAML>=5.3.1\n",
+            "  Downloading PyYAML-6.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl (596 kB)\n",
+            "\u001b[K     |████████████████████████████████| 596 kB 63.0 MB/s \n",
+            "\u001b[?25hCollecting requests\n",
+            "  Downloading requests-2.27.1-py2.py3-none-any.whl (63 kB)\n",
+            "\u001b[K     |████████████████████████████████| 63 kB 2.2 MB/s \n",
+            "\u001b[?25hRequirement already satisfied: charset-normalizer~=2.0.0 in /usr/local/lib/python3.7/dist-packages (from requests->roboflow) (2.0.12)\n",
+            "Building wheels for collected packages: roboflow, wget\n",
+            "  Building wheel for roboflow (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for roboflow: filename=roboflow-0.2.4-py3-none-any.whl size=21356 sha256=123a2b5ee4ec71592e266e123720b84958b0b43820d91ece51f15b1bea1f201e\n",
+            "  Stored in directory: /root/.cache/pip/wheels/b7/2c/60/3733c0e323b1d7aec00f852264314bf6c48192c8e1dc92b3ee\n",
+            "  Building wheel for wget (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for wget: filename=wget-3.2-py3-none-any.whl size=9675 sha256=1de4ba01a1c30693b9b8af11688013ab1a18b4165b03019b40c01323c633d172\n",
+            "  Stored in directory: /root/.cache/pip/wheels/a1/b6/7c/0e63e34eb06634181c63adacca38b79ff8f35c37e3c13e3c02\n",
+            "Successfully built roboflow wget\n",
+            "Installing collected packages: urllib3, certifi, requests, pyparsing, kiwisolver, cycler, wget, requests-toolbelt, PyYAML, python-dotenv, chardet, roboflow\n",
+            "  Attempting uninstall: urllib3\n",
+            "    Found existing installation: urllib3 1.24.3\n",
+            "    Uninstalling urllib3-1.24.3:\n",
+            "      Successfully uninstalled urllib3-1.24.3\n",
+            "  Attempting uninstall: certifi\n",
+            "    Found existing installation: certifi 2022.5.18.1\n",
+            "    Uninstalling certifi-2022.5.18.1:\n",
+            "      Successfully uninstalled certifi-2022.5.18.1\n",
+            "  Attempting uninstall: requests\n",
+            "    Found existing installation: requests 2.23.0\n",
+            "    Uninstalling requests-2.23.0:\n",
+            "      Successfully uninstalled requests-2.23.0\n",
+            "  Attempting uninstall: pyparsing\n",
+            "    Found existing installation: pyparsing 3.0.9\n",
+            "    Uninstalling pyparsing-3.0.9:\n",
+            "      Successfully uninstalled pyparsing-3.0.9\n",
+            "  Attempting uninstall: kiwisolver\n",
+            "    Found existing installation: kiwisolver 1.4.2\n",
+            "    Uninstalling kiwisolver-1.4.2:\n",
+            "      Successfully uninstalled kiwisolver-1.4.2\n",
+            "  Attempting uninstall: cycler\n",
+            "    Found existing installation: cycler 0.11.0\n",
+            "    Uninstalling cycler-0.11.0:\n",
+            "      Successfully uninstalled cycler-0.11.0\n",
+            "  Attempting uninstall: PyYAML\n",
+            "    Found existing installation: PyYAML 3.13\n",
+            "    Uninstalling PyYAML-3.13:\n",
+            "      Successfully uninstalled PyYAML-3.13\n",
+            "  Attempting uninstall: chardet\n",
+            "    Found existing installation: chardet 3.0.4\n",
+            "    Uninstalling chardet-3.0.4:\n",
+            "      Successfully uninstalled chardet-3.0.4\n",
+            "\u001b[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n",
+            "google-colab 1.0.0 requires requests~=2.23.0, but you have requests 2.27.1 which is incompatible.\n",
+            "datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.\n",
+            "albumentations 0.1.12 requires imgaug<0.2.7,>=0.2.5, but you have imgaug 0.2.9 which is incompatible.\u001b[0m\n",
+            "Successfully installed PyYAML-6.0 certifi-2021.5.30 chardet-4.0.0 cycler-0.10.0 kiwisolver-1.3.1 pyparsing-2.4.7 python-dotenv-0.20.0 requests-2.27.1 requests-toolbelt-0.9.1 roboflow-0.2.4 urllib3-1.26.6 wget-3.2\n"
+          ]
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "application/vnd.colab-display-data+json": {
+              "pip_warning": {
+                "packages": [
+                  "cycler",
+                  "kiwisolver",
+                  "pyparsing"
+                ]
+              }
+            }
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "loading Roboflow workspace...\n",
+            "loading Roboflow project...\n",
+            "Downloading Dataset Version Zip in demo_v2_style-2 to yolov5pytorch: 100% [23046543 / 23046543] bytes\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "Extracting Dataset Version Zip to demo_v2_style-2 in yolov5pytorch:: 100%|██████████| 3317/3317 [00:02<00:00, 1603.39it/s]\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install roboflow\n",
+        "\n",
+        "from roboflow import Roboflow\n",
+        "rf = Roboflow(api_key=\"V1xrnYqaT6VW3skv3nh8\")\n",
+        "project = rf.workspace(\"example01\").project(\"demo_v2_style\")\n",
+        "dataset = project.version(2).download(\"yolov5\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!nvidia-smi"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "tr4C2Rc3zh3C",
+        "outputId": "8bb5dd63-2107-48d2-a51e-595fbb6ae7ea"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Fri Jun  3 08:47:57 2022       \n",
+            "+-----------------------------------------------------------------------------+\n",
+            "| NVIDIA-SMI 460.32.03    Driver Version: 460.32.03    CUDA Version: 11.2     |\n",
+            "|-------------------------------+----------------------+----------------------+\n",
+            "| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |\n",
+            "| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |\n",
+            "|                               |                      |               MIG M. |\n",
+            "|===============================+======================+======================|\n",
+            "|   0  Tesla P100-PCIE...  Off  | 00000000:00:04.0 Off |                    0 |\n",
+            "| N/A   39C    P0    27W / 250W |      0MiB / 16280MiB |      0%      Default |\n",
+            "|                               |                      |                  N/A |\n",
+            "+-------------------------------+----------------------+----------------------+\n",
+            "                                                                               \n",
+            "+-----------------------------------------------------------------------------+\n",
+            "| Processes:                                                                  |\n",
+            "|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |\n",
+            "|        ID   ID                                                   Usage      |\n",
+            "|=============================================================================|\n",
+            "|  No running processes found                                                 |\n",
+            "+-----------------------------------------------------------------------------+\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "aLt27QK3wAiT",
+        "outputId": "b8dc6972-5660-42cf-8851-80528c44b661"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/content\n",
+            "fatal: destination path 'yolov5' already exists and is not an empty directory.\n"
+          ]
+        }
+      ],
+      "source": [
+        "# yolov5 다운로드 \n",
+        "%cd /content\n",
+        "!git clone https://github.com/ultralytics/yolov5.git"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "KvsJTtufwDYO",
+        "outputId": "75852da4-605a-4872-dfbb-88720b5bacfd"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "1316 338\n",
+            "1316 338\n"
+          ]
+        }
+      ],
+      "source": [
+        "# 이미지 list \n",
+        "train_img_list = glob('/content/demo_v2_style-2/train/images/*.jpg')\n",
+        "val_img_list = glob('/content/demo_v2_style-2/valid/images/*.jpg')\n",
+        "\n",
+        "# label list \n",
+        "train_label_list = glob('/content/demo_v2_style-2/train/labels/*.txt')\n",
+        "val_label_list = glob('/content/demo_v2_style-2/valid/labels/*.txt')\n",
+        "\n",
+        "\n",
+        "print(len(train_img_list) , len(val_img_list) )\n",
+        "print(len(train_label_list) , len(val_label_list) )"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "id": "BcrE3MIewDay"
+      },
+      "outputs": [],
+      "source": [
+        "with open('/content/demo_v2_style-2/train.txt' , 'w') as f : \n",
+        "    f.write('\\n'.join(train_img_list))\n",
+        "with open('/content/demo_v2_style-2/val.txt' , 'w') as f : \n",
+        "    f.write('\\n'.join(val_img_list))\n",
+        "\n",
+        "\n",
+        "with open('/content/demo_v2_style-2/train.txt' , 'a') as f : \n",
+        "    f.write('\\n'.join(train_label_list))\n",
+        "with open('/content/demo_v2_style-2/val.txt' , 'a') as f : \n",
+        "    f.write('\\n'.join(val_label_list))\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%cat /content/demo_v1_style-1/data.yaml"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "rxqIuwdy6zKt",
+        "outputId": "3b04c65e-4aad-4f5f-c462-78c99476d425"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "cat: /content/demo_v1_style-1/data.yaml: No such file or directory\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 12,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FwOrpulmwDdV",
+        "outputId": "22a10f36-eda2-4340-8d3e-2e075b31b148"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "{'names': ['bottom_cotton', 'bottom_jean', 'bottom_jogger', 'bottom_slacks', 'top_long', 'top_short'], 'nc': 6, 'train': '/content/demo_v2_style-2/train.txt', 'val': '/content/demo_v2_style-2/val.txt'}\n"
+          ]
+        }
+      ],
+      "source": [
+        "import yaml\n",
+        "\n",
+        "with open('/content/demo_v2_style-2/data.yaml' , 'r') as f : \n",
+        "    data = yaml.safe_load(f) # yaml.load() x => yaml.safe_load(f)\n",
+        "\n",
+        "\n",
+        "data['train'] = '/content/demo_v2_style-2/train.txt'   \n",
+        "data['val'] = '/content/demo_v2_style-2/val.txt'\n",
+        "\n",
+        "   \n",
+        "\n",
+        "with open ('/content/demo_v2_style-2/data.yaml' , 'w') as f : \n",
+        "    yaml.dump(data, f )\n",
+        "\n",
+        "print(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 15,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Pw9HfiFLwDf9",
+        "outputId": "75ead8c2-47b3-460c-a377-08dfd489d9ef"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/content/yolov5\n",
+            "\u001b[34m\u001b[1mtrain: \u001b[0mweights=yolov5l.pt, cfg=./models/yolov5l.yaml, data=/content/demo_v2_style-2/data.yaml, hyp=data/hyps/hyp.scratch-low.yaml, epochs=30, batch_size=70, imgsz=416, rect=False, resume=False, nosave=False, noval=False, noautoanchor=False, noplots=False, evolve=None, bucket=, cache=None, image_weights=False, device=, multi_scale=False, single_cls=False, optimizer=SGD, sync_bn=False, workers=8, project=runs/train, name=demo_result, exist_ok=False, quad=False, cos_lr=False, label_smoothing=0.0, patience=100, freeze=[0], save_period=-1, local_rank=-1, entity=None, upload_dataset=False, bbox_interval=-1, artifact_alias=latest\n",
+            "\u001b[34m\u001b[1mgithub: \u001b[0mup to date with https://github.com/ultralytics/yolov5 ✅\n",
+            "YOLOv5 🚀 v6.1-243-g7cef03d Python-3.7.13 torch-1.11.0+cu113 CUDA:0 (Tesla P100-PCIE-16GB, 16281MiB)\n",
+            "\n",
+            "\u001b[34m\u001b[1mhyperparameters: \u001b[0mlr0=0.01, lrf=0.01, momentum=0.937, weight_decay=0.0005, warmup_epochs=3.0, warmup_momentum=0.8, warmup_bias_lr=0.1, box=0.05, cls=0.5, cls_pw=1.0, obj=1.0, obj_pw=1.0, iou_t=0.2, anchor_t=4.0, fl_gamma=0.0, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, degrees=0.0, translate=0.1, scale=0.5, shear=0.0, perspective=0.0, flipud=0.0, fliplr=0.5, mosaic=1.0, mixup=0.0, copy_paste=0.0\n",
+            "\u001b[34m\u001b[1mWeights & Biases: \u001b[0mrun 'pip install wandb' to automatically track and visualize YOLOv5 🚀 runs (RECOMMENDED)\n",
+            "\u001b[34m\u001b[1mTensorBoard: \u001b[0mStart with 'tensorboard --logdir runs/train', view at http://localhost:6006/\n",
+            "Downloading https://ultralytics.com/assets/Arial.ttf to /root/.config/Ultralytics/Arial.ttf...\n",
+            "100% 755k/755k [00:00<00:00, 24.7MB/s]\n",
+            "Downloading https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5l.pt to yolov5l.pt...\n",
+            "100% 89.3M/89.3M [00:02<00:00, 39.0MB/s]\n",
+            "\n",
+            "Overriding model.yaml nc=80 with nc=6\n",
+            "\n",
+            "                 from  n    params  module                                  arguments                     \n",
+            "  0                -1  1      7040  models.common.Conv                      [3, 64, 6, 2, 2]              \n",
+            "  1                -1  1     73984  models.common.Conv                      [64, 128, 3, 2]               \n",
+            "  2                -1  3    156928  models.common.C3                        [128, 128, 3]                 \n",
+            "  3                -1  1    295424  models.common.Conv                      [128, 256, 3, 2]              \n",
+            "  4                -1  6   1118208  models.common.C3                        [256, 256, 6]                 \n",
+            "  5                -1  1   1180672  models.common.Conv                      [256, 512, 3, 2]              \n",
+            "  6                -1  9   6433792  models.common.C3                        [512, 512, 9]                 \n",
+            "  7                -1  1   4720640  models.common.Conv                      [512, 1024, 3, 2]             \n",
+            "  8                -1  3   9971712  models.common.C3                        [1024, 1024, 3]               \n",
+            "  9                -1  1   2624512  models.common.SPPF                      [1024, 1024, 5]               \n",
+            " 10                -1  1    525312  models.common.Conv                      [1024, 512, 1, 1]             \n",
+            " 11                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          \n",
+            " 12           [-1, 6]  1         0  models.common.Concat                    [1]                           \n",
+            " 13                -1  3   2757632  models.common.C3                        [1024, 512, 3, False]         \n",
+            " 14                -1  1    131584  models.common.Conv                      [512, 256, 1, 1]              \n",
+            " 15                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          \n",
+            " 16           [-1, 4]  1         0  models.common.Concat                    [1]                           \n",
+            " 17                -1  3    690688  models.common.C3                        [512, 256, 3, False]          \n",
+            " 18                -1  1    590336  models.common.Conv                      [256, 256, 3, 2]              \n",
+            " 19          [-1, 14]  1         0  models.common.Concat                    [1]                           \n",
+            " 20                -1  3   2495488  models.common.C3                        [512, 512, 3, False]          \n",
+            " 21                -1  1   2360320  models.common.Conv                      [512, 512, 3, 2]              \n",
+            " 22          [-1, 10]  1         0  models.common.Concat                    [1]                           \n",
+            " 23                -1  3   9971712  models.common.C3                        [1024, 1024, 3, False]        \n",
+            " 24      [17, 20, 23]  1     59235  models.yolo.Detect                      [6, [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]], [256, 512, 1024]]\n",
+            "YOLOv5l summary: 468 layers, 46165219 parameters, 46165219 gradients\n",
+            "\n",
+            "Transferred 606/613 items from yolov5l.pt\n",
+            "\u001b[34m\u001b[1mAMP: \u001b[0mchecks passed ✅\n",
+            "Scaled weight_decay = 0.000546875\n",
+            "\u001b[34m\u001b[1moptimizer:\u001b[0m SGD with parameter groups 101 weight (no decay), 104 weight, 104 bias\n",
+            "\u001b[34m\u001b[1malbumentations: \u001b[0mversion 1.0.3 required by YOLOv5, but version 0.1.12 is currently installed\n",
+            "\u001b[34m\u001b[1mtrain: \u001b[0mScanning '/content/demo_v2_style-2/train' images and labels...1315 found, 0 missing, 1 empty, 0 corrupt: 100% 1315/1315 [00:00<00:00, 2134.23it/s]\n",
+            "\u001b[34m\u001b[1mtrain: \u001b[0mNew cache created: /content/demo_v2_style-2/train.cache\n",
+            "\u001b[34m\u001b[1mval: \u001b[0mScanning '/content/demo_v2_style-2/val' images and labels...337 found, 0 missing, 0 empty, 0 corrupt: 100% 337/337 [00:00<00:00, 931.50it/s]\n",
+            "\u001b[34m\u001b[1mval: \u001b[0mNew cache created: /content/demo_v2_style-2/val.cache\n",
+            "Plotting labels to runs/train/demo_result/labels.jpg... \n",
+            "\n",
+            "\u001b[34m\u001b[1mAutoAnchor: \u001b[0m3.63 anchors/target, 1.000 Best Possible Recall (BPR). Current anchors are a good fit to dataset ✅\n",
+            "Image sizes 416 train, 416 val\n",
+            "Using 2 dataloader workers\n",
+            "Logging results to \u001b[1mruns/train/demo_result\u001b[0m\n",
+            "Starting training for 30 epochs...\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      0/29     15.4G   0.08972   0.02326   0.05373       115       416: 100% 19/19 [00:46<00:00,  2.45s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:05<00:00,  1.81s/it]\n",
+            "                 all        337        344      0.418      0.317      0.102     0.0317\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      1/29     15.8G   0.05693   0.01979   0.04744       132       416: 100% 19/19 [00:43<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.56s/it]\n",
+            "                 all        337        344      0.456      0.477      0.264      0.137\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      2/29     15.8G   0.04828   0.01651   0.04536       147       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.52s/it]\n",
+            "                 all        337        344      0.365      0.649      0.432      0.233\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      3/29     15.8G   0.04397   0.01411   0.04102       149       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.315      0.681      0.459      0.245\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      4/29     15.8G   0.04078   0.01295   0.03625       148       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.52s/it]\n",
+            "                 all        337        344      0.319      0.609       0.44       0.28\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      5/29     15.8G   0.03774   0.01242   0.03263       144       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.56s/it]\n",
+            "                 all        337        344      0.395      0.647      0.501      0.288\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      6/29     15.8G   0.03393   0.01185   0.03121       146       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.329      0.413      0.346      0.203\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      7/29     15.8G   0.03252   0.01143   0.02985       135       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.315      0.664      0.522      0.355\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      8/29     15.8G   0.03046    0.0117   0.02891       126       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.44s/it]\n",
+            "                 all        337        344      0.727       0.18      0.201      0.126\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "      9/29     15.8G   0.02919   0.01113   0.02941       127       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.296      0.293      0.182      0.125\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     10/29     15.8G   0.02741   0.01095   0.02736       145       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.606      0.487      0.527      0.373\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     11/29     15.8G   0.02787   0.01084   0.02739       135       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.47s/it]\n",
+            "                 all        337        344       0.45      0.391      0.357      0.217\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     12/29     15.8G   0.02642   0.01085   0.02644       146       416: 100% 19/19 [00:43<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.645      0.671      0.685      0.515\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     13/29     15.8G   0.02598   0.01059   0.02332       133       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.49s/it]\n",
+            "                 all        337        344      0.733       0.58      0.738      0.562\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     14/29     15.8G   0.02413   0.01057   0.02405       143       416: 100% 19/19 [00:43<00:00,  2.27s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.681      0.738      0.766      0.594\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     15/29     15.8G   0.02329   0.01025   0.02231       130       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.662       0.71      0.774      0.623\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     16/29     15.8G   0.02214  0.009965   0.02408       124       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.49s/it]\n",
+            "                 all        337        344      0.726      0.553      0.673      0.479\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     17/29     15.8G   0.02302  0.009773   0.02426       131       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.681      0.777      0.798      0.635\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     18/29     15.8G    0.0217  0.009764   0.02017       141       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.731      0.802      0.833      0.684\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     19/29     15.8G   0.02074  0.009286   0.01947       126       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.761      0.749      0.828      0.693\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     20/29     15.8G    0.0207  0.009517   0.02026       137       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.825      0.842      0.887      0.741\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     21/29     15.8G   0.01966   0.00916   0.01854       123       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.875      0.871      0.928      0.804\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     22/29     15.8G   0.01991  0.008776   0.01934       122       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.789      0.827      0.885      0.747\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     23/29     15.8G   0.01899  0.009173   0.01811       127       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.854      0.746       0.89      0.772\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     24/29     15.8G   0.01892  0.008726   0.01764       128       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.804      0.879      0.928      0.791\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     25/29     15.8G   0.01721  0.008732   0.01576       154       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344       0.77      0.816      0.885       0.74\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     26/29     15.8G   0.01739  0.008525   0.01509       137       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.50s/it]\n",
+            "                 all        337        344      0.889      0.881      0.937      0.812\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     27/29     15.8G   0.01641   0.00846   0.01348       121       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.913      0.877      0.945      0.817\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     28/29     15.8G   0.01605   0.00818   0.01378       132       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344        0.9      0.913      0.954      0.834\n",
+            "\n",
+            "     Epoch   gpu_mem       box       obj       cls    labels  img_size\n",
+            "     29/29     15.8G   0.01583  0.008129   0.01229       124       416: 100% 19/19 [00:42<00:00,  2.26s/it]\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:04<00:00,  1.51s/it]\n",
+            "                 all        337        344      0.826      0.876      0.922      0.809\n",
+            "\n",
+            "30 epochs completed in 0.417 hours.\n",
+            "Optimizer stripped from runs/train/demo_result/weights/last.pt, 92.8MB\n",
+            "Optimizer stripped from runs/train/demo_result/weights/best.pt, 92.8MB\n",
+            "\n",
+            "Validating runs/train/demo_result/weights/best.pt...\n",
+            "Fusing layers... \n",
+            "YOLOv5l summary: 367 layers, 46135203 parameters, 0 gradients\n",
+            "               Class     Images     Labels          P          R     mAP@.5 mAP@.5:.95: 100% 3/3 [00:06<00:00,  2.16s/it]\n",
+            "                 all        337        344        0.9      0.913      0.954      0.834\n",
+            "       bottom_cotton        337         86      0.797      0.919      0.911      0.812\n",
+            "         bottom_jean        337         82      0.972      0.856      0.957      0.762\n",
+            "       bottom_jogger        337         81      0.886      0.767      0.885      0.753\n",
+            "       bottom_slacks        337         68      0.889      0.939      0.978       0.93\n",
+            "            top_long        337         11      0.879          1      0.995       0.87\n",
+            "           top_short        337         16      0.977          1      0.995      0.878\n",
+            "Results saved to \u001b[1mruns/train/demo_result\u001b[0m\n"
+          ]
+        }
+      ],
+      "source": [
+        "# 라벨인식을 못하는 문제 발생함 !!!! 확인할것. \n",
+        "# 이미지와 라벨파일을 같은 txt에 추가하여 해결함 \n",
+        "# yolov5s 가장 가벼운 모델 , yolov5l은 무거운 모델 성능이 조금 더 좋음 \n",
+        "\n",
+        "%cd /content/yolov5/\n",
+        "\n",
+        "!python train.py --img 416 --batch 70 --epochs 30 \\\n",
+        "--data /content/demo_v2_style-2/data.yaml \\\n",
+        "--cfg ./models/yolov5l.yaml \\\n",
+        "--weights yolov5l.pt \\\n",
+        "--name demo_result"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 14,
+      "metadata": {
+        "id": "Z7U8U_8D4VaG",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "ac352f77-d2f7-4fc4-83a4-322dfc39aac3"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Traceback (most recent call last):\n",
+            "  File \"detect.py\", line 41, in <module>\n",
+            "    from models.common import DetectMultiBackend\n",
+            "  File \"/content/yolov5/models/common.py\", line 17, in <module>\n",
+            "    import requests\n",
+            "  File \"/usr/local/lib/python3.7/dist-packages/requests/__init__.py\", line 43, in <module>\n",
+            "    import urllib3\n",
+            "  File \"/usr/local/lib/python3.7/dist-packages/urllib3/__init__.py\", line 43, in <module>\n",
+            "    logging.getLogger(__name__).addHandler(NullHandler())\n",
+            "  File \"/usr/lib/python3.7/logging/__init__.py\", line 1935, in getLogger\n",
+            "    return Logger.manager.getLogger(name)\n",
+            "  File \"/usr/lib/python3.7/logging/__init__.py\", line 1239, in getLogger\n",
+            "    self._fixupChildren(ph, rv)\n",
+            "  File \"/usr/lib/python3.7/logging/__init__.py\", line 1298, in _fixupChildren\n",
+            "    for c in ph.loggerMap.keys():\n",
+            "KeyboardInterrupt\n"
+          ]
+        }
+      ],
+      "source": [
+        "# 추론하기 \n",
+        "from IPython.display import Image\n",
+        "import os\n",
+        "\n",
+        "\n",
+        "# /content/test03-2/test/images/ 이미지파일 판정\n",
+        "\n",
+        "!python detect.py  --source /content/test03-3/test --weights /content/yolov5/runs/train/test02_result3/weights/best.pt \\\n",
+        " --img 416 --conf 0.5 --source /content/test03-1/test/images/"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "y1MO0_-d4VfW"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "QBr1pXjJ4Vji"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "8RJNYyTp4VmZ"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "ZgvsaC-s4VpX"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "auU155IE4VsF"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "C7TJ24O84Vun"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "GCyE2RdK4Vxr"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "accelerator": "GPU",
+    "colab": {
+      "name": "demov2_style_cloths.ipynb의 사본",
+      "provenance": [],
+      "collapsed_sections": [],
+      "authorship_tag": "ABX9TyN0SUudkxK1dO9bDQDWghbL",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
